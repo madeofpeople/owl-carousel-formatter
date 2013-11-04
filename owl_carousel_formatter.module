@@ -13,16 +13,77 @@ function owl_carousel_formatter_field_formatter_info() {
     ),
   );
 }
+
+
+
+
 /**
  * Implements hook_field_formatter_settings_form().
  */
 function owl_carousel_formatter_field_formatter_settings_form($field, $instance, $view_mode) {
-  dpm("hihihi");
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
-  $form = array();
 
-  return $form;
+  // create a pulldown for choosing image_styles
+  $options = array(t('None'),);
+  foreach (image_styles() as $id => $style) {
+    $options[$id] = $id;
+  }
+  $style_options = array();
+  $styles = module_invoke_all('galleryformatter_styles');
+  foreach ($styles as $style) {
+    $style_options[$style] = $style;
+  }
+  ksort($style_options);
+
+  // build form
+  $element = array();
+
+  $element['style'] = array(
+    '#type' => 'select',
+    '#title' => t('Style'),
+    '#options' => array('nostyle' => t('No style')) + $style_options,
+    '#default_value' => $settings['style'],
+    '#description' => t('Choose the image style.'),
+  );
+
+  $element['singleitem'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('singleItem'),
+    '#default_value' => $settings['singleitem'],
+    '#description' => t('Display only one item. <a href="demos/one.html">See demo</a>'),
+  );
+
+  $element['navigation'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('navigation'),
+    '#default_value' => $settings['navigation'],
+    '#description' => t('Display "next" and "prev" buttons.'),
+  );
+
+  $element['pagination'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('pagination'),
+    '#default_value' => $settings['pagination'],
+    '#description' => t('Show pagination.'),
+  );
+
+  $element['scrollPerPage'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('scrollPerPage'),
+    '#default_value' => $settings['scrollPerPage'],
+    '#description' => t('Scroll per page not per item.'),
+  );
+
+
+  $element['lazyLoad'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('lazyLoad'),
+    '#default_value' => $settings['lazyLoad'],
+    '#description' => t('Delays loading of images. Images outside of viewport won\'t be loaded before user scrolls to them. Great for mobile devices to speed up page loadings. IMG need special markup class="lazyOwl" and data-src="your img path". <a href="http://owlgraphic.com/owlcarousel/demos/lazyLoad.html">See example.</a>'),
+  );
+  // why arent settings saving?
+  return $element;
 }
 
 /**
@@ -31,7 +92,7 @@ function owl_carousel_formatter_field_formatter_settings_form($field, $instance,
 function owl_carousel_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
-  return '<h3>Settings Coming soon!</h3>';
+  return 'Display images using the OWL carousel jQuery plugin.';
 }
 
 /**
@@ -57,6 +118,9 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
   }
   $modulepath = drupal_get_path('module', 'owl_carousel');
   $settings = $display['settings'];
+  
+//  dpm( $settings );
+
   $settings['style'] = strtolower($settings['style']);
 
   // Media field support (only images 
@@ -107,8 +171,6 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
   }
 
   $itemCount = count($items);
-
-  dpm( $itemCount );
 
   // prepare the renderable array
   $renderitems = array();
@@ -168,10 +230,10 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
   }
 
   if($itemCount > 1){
-    dpm("test");
     // @todo allow min and non-min versions from settings
     drupal_add_js( libraries_get_path('owl-carousel') . '/owl.carousel.min.js');
     drupal_add_js( drupal_get_path('module', 'owl_carousel_formatter') . '/js/owl_carousel_formatter.js');
+    drupal_add_js( array('owl_carousel_formatter' => array( 'pagination' => $settings['pagination'])), 'setting');
    }
   // @todo make these both checkbox optional via admin panel
   drupal_add_css( libraries_get_path('owl-carousel') . '/owl.carousel.css');
@@ -179,9 +241,7 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
 
   // prepare the variables for our theme function
   $element['#theme'] ='owl_carousel_formatter';
-  $element['#settings'] = $settings;
   $element['#images'] = $renderitems['images'];
-//  $element['#dimensions'] = $dimensions;
 
   return $element;
 }
