@@ -1,0 +1,188 @@
+<?php
+
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function owl_carousel_formatter_field_formatter_info() {
+  return array(
+    'owl_carousel' => array(
+      'label' => t('OWL Carousel'),
+      'field types' => array('image','media'),
+      'settings' => array(),
+      'description' => t('Display multi-value fields as an OWL Carousel.'),
+    ),
+  );
+}
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function owl_carousel_formatter_field_formatter_settings_form($field, $instance, $view_mode) {
+  dpm("hihihi");
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $form = array();
+
+  return $form;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function owl_carousel_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  return '<h3>Settings Coming soon!</h3>';
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function owl_carousel_formatter_theme() {
+  return array(
+    'owl_carousel_formatter' => array(
+      'variables' => array( 'images'=> NULL, 'settings' => NULL),
+      'template' => 'theme/owl_carousel_formatter'
+    )
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  // if there are no images, dont do anything else
+  if(empty($items)){
+    return $element;
+  }
+  $modulepath = drupal_get_path('module', 'owl_carousel');
+  $settings = $display['settings'];
+  $settings['style'] = strtolower($settings['style']);
+
+  // Media field support (only images 
+  // @todo, owl carousel can handle anything inside the divs, so we could do semantic html video output for media elements too)
+  if ($field['type'] == 'media') {
+    foreach ($items as $delta => $item) {
+      if ($item['file']->type == 'image') {
+        $items[$delta] = (array) $item; // Compatibility with 7.x-1.0-beta4 and previous media versions
+        $items[$delta]['uri'] = $item['file']->uri;
+        $items[$delta]['filename'] = $item['file']->filename;
+      }
+    }
+    /**
+     * If it's not an image remove it from our items.
+     * We need to do it on another foreach in order not to mess up the $delta on the next run above.
+     */
+    $changed = FALSE;
+    foreach($items as $delta => $item) {
+      if ($item['file']->type !== 'image') {
+        unset($items[$delta]);
+        $changed = TRUE;
+      }
+    }
+    // if we removed from $items, reset the array keys
+    if ($changed) {
+      $items = array_values($items);
+    }
+  }
+
+  // Get the dimensions, and remove unfound files,
+  // to avoid errors when the image is no longer on the server but still in the image field.
+  $changed = FALSE;
+  foreach ($items as $delta => $item) {
+    $dimensions['images'] = file_exists( $items[$delta]['uri'] );
+    if (!$dimensions['images']) {
+      unset($items[$delta]);
+      $changed = TRUE;
+    }
+  };
+  // if we removed from $items, reset the array keys
+  if ($changed) {
+    $items = array_values($items);
+  }
+
+  // if there are no images, dont do anything else
+  if(empty($items)) {
+    return $element;
+  }
+
+  $itemCount = count($items);
+
+  dpm( $itemCount );
+
+  // prepare the renderable array
+  $renderitems = array();
+  // get the unique entity id for later
+  $ids = entity_extract_ids($entity_type, $entity);
+  $entity_id =  $ids[0];
+
+  foreach ($items as $delta => $item){
+    // Grab and sanitize image information
+    if (!empty($item['title'])) {
+      // Sanitize the title
+      if(strpos($item['title'], '<') !== FALSE) {
+        $item['title'] = strip_tags($item['title']);
+      }
+    } else {
+      $item['title'] = ''; // prevents php notices
+    }
+    $renderitems['images'][$delta]['title'] = $item['title'];
+    $item['filename'] = $item['filename'] = '';
+
+    // Check if alt attribute is already set and sanitize it, if not use the filename as alt attribute
+    if (isset($item['alt']) && !empty($item['alt'])) {
+      if(strpos($item['alt'], '<') !== FALSE) {
+        $item['alt'] = strip_tags($item['alt']);
+      }
+    } else {
+      $item['alt'] = $item['filename'];
+    }
+    $renderitems['images'][$delta]['alt'] = $item['alt'];
+
+    // If the title is empty use alt or the node title in that order.
+    if (empty($item['title'])) {
+      if (!empty($item['alt'])) {
+        $item['title'] = $item['alt'];
+      } else {
+        if(!empty($entity->title)){
+          if(strpos($entity->title, '<') !== FALSE) {
+            $item['title'] = strip_tags($entity->title);
+          } else {
+            $item['title'] = $entity->title;
+          }
+        }
+        // if we have more than one image, add the image count to the title so they are not all the same.
+        $item['title'] = ($itemCount > 1) ? $item['title'] . t(' image ') . ($delta + 1) : $item['title'];
+      }
+    }
+
+    // prepare the unique hash id per image
+    $id = $field['field_name'] . '-' . $entity_id;
+    $renderitems['images'][$delta]['hash_id'] = 'item-' . $delta . '-' . $id;
+
+    $renderitems['images'][$delta]['image'] = theme('image_formatter', array(
+        'item' => $item,
+      )
+    );
+
+  }
+
+  if($itemCount > 1){
+    dpm("test");
+    // @todo allow min and non-min versions from settings
+    drupal_add_js( libraries_get_path('owl-carousel') . '/owl.carousel.min.js');
+    drupal_add_js( drupal_get_path('module', 'owl_carousel_formatter') . '/js/owl_carousel_formatter.js');
+   }
+  // @todo make these both checkbox optional via admin panel
+  drupal_add_css( libraries_get_path('owl-carousel') . '/owl.carousel.css');
+  drupal_add_css( libraries_get_path('owl-carousel') . '/owl.theme.css');
+
+  // prepare the variables for our theme function
+  $element['#theme'] ='owl_carousel_formatter';
+  $element['#settings'] = $settings;
+  $element['#images'] = $renderitems['images'];
+//  $element['#dimensions'] = $dimensions;
+
+  return $element;
+}
+
