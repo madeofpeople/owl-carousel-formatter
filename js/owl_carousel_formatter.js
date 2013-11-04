@@ -1,7 +1,7 @@
-(function($){
+(function($, Drupal){
   Drupal.behaviors.galleryformatter = {
-  attach: function (context) {
-    console.log("Drupal.behaviors.galleryformatter:", context );
+  attach: function (context, settings ) {
+    console.log("Drupal.behaviors.galleryformatter:", settings );
     $( '.owl-carousel-formatter:not(.instantiated)', context ).each( function(){
       $(this).owlCarousel({
         navigation : false,
@@ -11,4 +11,4 @@
     }).addClass( 'instantiated' );
   }
 }
-}(jQuery));
+}(jQuery,Drupal));
