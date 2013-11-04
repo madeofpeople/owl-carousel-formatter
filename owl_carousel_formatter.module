@@ -14,16 +14,23 @@ function owl_carousel_formatter_field_formatter_info() {
   );
 }
 
-
 /**
  * Implements hook_field_formatter_settings_form().
  */
-function owl_carousel_formatter_field_formatter_settings_form($field, $instance, $view_mode) {
+function owl_carousel_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
+  $widget_settings = $field['settings'];
+
+  dpm( $field );
+  dpm( $instance );
+  dpm( $form );
+  dpm( $settings );
+  dpm( $widget_settings );
 
   // create a pulldown for choosing image_styles
-  $options = array(t('None'),);
+  $options = array(t('No Image Styles are Currently Available'),);
   foreach (image_styles() as $id => $style) {
     $options[$id] = $id;
   }
@@ -33,9 +40,6 @@ function owl_carousel_formatter_field_formatter_settings_form($field, $instance,
     $style_options[$style] = $style;
   }
   ksort($style_options);
-
-  // build form
-  $element = array();
 
   $element['style'] = array(
     '#type' => 'select',
@@ -48,7 +52,7 @@ function owl_carousel_formatter_field_formatter_settings_form($field, $instance,
   $element['singleitem'] = array(
     '#type' => 'checkbox',
     '#title' => t('singleItem'),
-    '#default_value' => $settings['singleitem'],
+    '#default_value' => variable_get('singleitem'),
     '#description' => t('Display only one item. <a href="demos/one.html">See demo</a>'),
   );
 
@@ -88,8 +92,8 @@ function owl_carousel_formatter_field_formatter_settings_form($field, $instance,
  * Implements hook_field_formatter_settings_summary().
  */
 function owl_carousel_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
-  $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
+  // $display = $instance['display'][$view_mode];
+  // $settings = $display['settings'];
   return 'Display images using the OWL carousel jQuery plugin.';
 }
 
@@ -228,8 +232,8 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
     // @todo allow min and non-min versions from settings
     drupal_add_js( libraries_get_path('owl-carousel') . '/owl.carousel.min.js');
     drupal_add_js( drupal_get_path('module', 'owl_carousel_formatter') . '/js/owl_carousel_formatter.js');
-    drupal_add_js( array('owl_carousel_formatter' => array( 'pagination' => $settings['pagination'])), 'setting');
-   }
+    drupal_add_js( array('owl_carousel_formatter' => $settings), 'setting');
+  }
   // @todo make these both checkbox optional via admin panel
   drupal_add_css( libraries_get_path('owl-carousel') . '/owl.carousel.css');
   drupal_add_css( libraries_get_path('owl-carousel') . '/owl.theme.css');
