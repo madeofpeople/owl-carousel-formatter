@@ -15,8 +15,6 @@ function owl_carousel_formatter_field_formatter_info() {
 }
 
 
-
-
 /**
  * Implements hook_field_formatter_settings_form().
  */
@@ -123,7 +121,7 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
 
   $settings['style'] = strtolower($settings['style']);
 
-  // Media field support (only images 
+  // Media field support (only images currently... change this) 
   // @todo, owl carousel can handle anything inside the divs, so we could do semantic html video output for media elements too)
   if ($field['type'] == 'media') {
     foreach ($items as $delta => $item) {
@@ -134,8 +132,7 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
       }
     }
     /**
-     * If it's not an image remove it from our items.
-     * We need to do it on another foreach in order not to mess up the $delta on the next run above.
+     * If it's not an image remove it from our items... for now.
      */
     $changed = FALSE;
     foreach($items as $delta => $item) {
@@ -150,12 +147,11 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
     }
   }
 
-  // Get the dimensions, and remove unfound files,
+  // emove unfound files,
   // to avoid errors when the image is no longer on the server but still in the image field.
   $changed = FALSE;
   foreach ($items as $delta => $item) {
-    $dimensions['images'] = file_exists( $items[$delta]['uri'] );
-    if (!$dimensions['images']) {
+    if (!file_exists( $items[$delta]['uri'])) {
       unset($items[$delta]);
       $changed = TRUE;
     }
@@ -189,6 +185,7 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
       $item['title'] = ''; // prevents php notices
     }
     $renderitems['images'][$delta]['title'] = $item['title'];
+    // whats this do?
     $item['filename'] = $item['filename'] = '';
 
     // Check if alt attribute is already set and sanitize it, if not use the filename as alt attribute
@@ -213,8 +210,6 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
             $item['title'] = $entity->title;
           }
         }
-        // if we have more than one image, add the image count to the title so they are not all the same.
-        $item['title'] = ($itemCount > 1) ? $item['title'] . t(' image ') . ($delta + 1) : $item['title'];
       }
     }
 
@@ -240,8 +235,9 @@ function owl_carousel_formatter_field_formatter_view($entity_type, $entity, $fie
   drupal_add_css( libraries_get_path('owl-carousel') . '/owl.theme.css');
 
   // prepare the variables for our theme function
-  $element['#theme'] ='owl_carousel_formatter';
+  $element['#settings'] = $settings;
   $element['#images'] = $renderitems['images'];
+  $element['#theme'] ='owl_carousel_formatter';
 
   return $element;
 }
