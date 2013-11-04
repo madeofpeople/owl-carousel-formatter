@@ -12,5 +12,5 @@ http://owlgraphic.com/owlcarousel/
 Todos
 =====
 + Wire up settings with http://owlgraphic.com/owlcarousel/#customizing
-+ Allow for non-image elements
++ Allow for non-image media elements
 + html5 video formatter (borrow from file entity?) https://drupal.org/node/1748952
