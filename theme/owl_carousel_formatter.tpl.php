@@ -12,12 +12,10 @@
  */
 
 ?>
-<h1>OWL CAROUSEL</h1>
 <div class="owl-carousel-formatter carousel">
-      <?php foreach ($images as $id => $data): ?>
-        <div id="<?php print $data['hash_id']; ?>">
-          <?php print $data['image']; ?>
-        </div>
-      <?php endforeach; ?>
-  </div>
+  <?php foreach ($images as $id => $data): ?>
+    <div id="<?php print $data['hash_id']; ?>">
+      <?php print $data['image']; ?>
+    </div>
+  <?php endforeach; ?>
 </div>
