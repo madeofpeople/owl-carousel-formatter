@@ -10,7 +10,7 @@ function owl_carousel_formatter_field_formatter_info() {
       'field types' => array('image','media'),
       'settings' => array(
         'imageStyle' => 'large',
-        'singleItem' => true,
+        'singleItem' => 1,
         'items' => NULL,
         'navigation' => 0,
         'pagination' => 1,
@@ -122,7 +122,7 @@ function owl_carousel_formatter_field_formatter_settings_form($field, $instance,
   $element['singleItem'] = array(
     '#type' => 'checkbox',
     '#title' => t('singleItem'),
-    '#default_value' => $settings['owl-carousel-formatter-singleItem'],
+    '#default_value' => $settings['singleItem'],
     '#description' => t('Display only one item. <a href="demos/one.html" target="_blank">See demo</a>'),
   );
   
