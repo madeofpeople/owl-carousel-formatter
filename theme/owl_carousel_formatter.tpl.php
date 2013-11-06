@@ -4,18 +4,11 @@
  * Template file for the owl-carousel-formatter
  */
 
-/**
- *  @todo see if there's a way to get breakpoints
- * make owl-carrousel options available through drupal.settings
- * $data['alt']
- * $data['title']
- */
-
 ?>
 <div class="owl-carousel-formatter carousel">
-  <?php foreach ($images as $id => $data): ?>
-    <div id="<?php print $data['hash_id']; ?>">
-      <?php print $data['image']; ?>
+  <?php foreach ($items as $id => $data): ?>
+    <div>
+      <?php print $data['item']; ?>
     </div>
   <?php endforeach; ?>
 </div>
